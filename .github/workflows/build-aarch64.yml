@@ -1,34 +1,51 @@
-name: Manual Build AArch64
+name: Test ARM64 Images
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-aarch64:
+  test-images:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Build inside ARM64 container (Alpine)
-        uses: uraimo/run-on-arch-action@v2.7.1
-        with:
-          arch: aarch64
-          distro: alpine
+      - name: Prepare test script
+        run: |
+          cat << 'EOF' > test.sh
+          #!/bin/bash
+          set -e
+          echo "Testing ARM64 distros..."
+          DISTROS=(
+            alpine
+            alpine_latest
+            ubuntu20.04
+            ubuntu22.04
+            focal
+            jammy
+            fedora_latest
+            fedora
+            archlinux_latest
+            centos7
+            debian
+            bullseye
+            bookworm
+          )
 
-          githubToken: ${{ github.token }}
+          for d in "${DISTROS[@]}"; do
+            echo ""
+            echo "=== Testing distro: $d ==="
+            if \
+              docker run --rm --platform=linux/arm64 "arm64v8/$d" uname -a 2>/dev/null; then
+              echo "[$d] OK"
+            else
+              echo "[$d] FAIL"
+            fi
+          done
+          EOF
 
-          install: |
-            apk update
-            apk add build-base cmake \
-                sdl2-dev sdl2_image-dev sdl2_ttf-dev
+          chmod +x test.sh
 
-          run: |
-            cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug
-            cmake --build build -j4
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdl2imgshow-aarch64
-          path: build/
+      - name: Run ARM64 test script
+        run: ./test.sh
