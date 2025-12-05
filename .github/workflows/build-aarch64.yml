@@ -1,51 +1,30 @@
-name: Test ARM64 Images
+name: Manual Build AArch64
 
 on:
   workflow_dispatch:
 
 jobs:
-  test-images:
-    runs-on: ubuntu-latest
+  build-aarch64:
+    runs-on: ubuntu-24.04-arm
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Prepare test script
+      - name: Install ARM64 dependencies
         run: |
-          cat << 'EOF' > test.sh
-          #!/bin/bash
-          set -e
-          echo "Testing ARM64 distros..."
-          DISTROS=(
-            alpine
-            alpine_latest
-            ubuntu20.04
-            ubuntu22.04
-            focal
-            jammy
-            fedora_latest
-            fedora
-            archlinux_latest
-            centos7
-            debian
-            bullseye
-            bookworm
-          )
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake build-essential \
+            libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
 
-          for d in "${DISTROS[@]}"; do
-            echo ""
-            echo "=== Testing distro: $d ==="
-            if \
-              docker run --rm --platform=linux/arm64 "arm64v8/$d" uname -a 2>/dev/null; then
-              echo "[$d] OK"
-            else
-              echo "[$d] FAIL"
-            fi
-          done
-          EOF
+      - name: Configure
+        run: cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug
 
-          chmod +x test.sh
+      - name: Build
+        run: cmake --build build -j4
 
-      - name: Run ARM64 test script
-        run: ./test.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl2imgshow-aarch64
+          path: build/
