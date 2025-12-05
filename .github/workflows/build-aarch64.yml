@@ -10,18 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build inside ARM64 container (Debian 12 Bookworm)
+      - name: Build inside ARM64 container (Alpine)
         uses: uraimo/run-on-arch-action@v2.7.1
         with:
           arch: aarch64
-          distro: bookworm
+          distro: alpine
 
           githubToken: ${{ github.token }}
 
           install: |
-            apt-get update
-            apt-get install -y cmake build-essential \
-                libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+            apk update
+            apk add build-base cmake \
+                sdl2-dev sdl2_image-dev sdl2_ttf-dev
 
           run: |
             cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug
