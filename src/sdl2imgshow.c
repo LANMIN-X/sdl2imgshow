@@ -940,15 +940,18 @@ SDL_Surface* render_text_wrapped(const char* text)
 
 bool load_image(const char *imageFile)
 {
-    // Load image
     char *imageRef = sub_vars(imageFile);
-
     if (imageRef == NULL)
         return false;
 
+    // Make a safe copy before free()
+    char imageRefCopy[512];
+    snprintf(imageRefCopy, sizeof(imageRefCopy), "%s", imageRef);
+
     if (!file_exists(imageRef))
     {
-        fprintf(stderr, "load_image: %s: file doesn't exist.\n", imageRef);
+        fprintf(stderr, "load_image: %s: file doesn't exist.\n", imageRefCopy);
+        free(imageRef);
         return false;
     }
 
@@ -957,15 +960,16 @@ bool load_image(const char *imageFile)
 
     if (imageSurface == NULL)
     {
-        fprintf(stderr, "IMG: Couldn't load %s: %s\n", imageRef, IMG_GetError());
+        fprintf(stderr, "IMG: Couldn't load %s: %s\n", imageRefCopy, IMG_GetError());
         return false;
     }
 
     SDL_Texture *imageTexture = SDL_CreateTextureFromSurface(renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
-    if (imageSurface == NULL)
+    if (imageTexture == NULL)
     {
+        fprintf(stderr, "IMG: Failed to create texture from %s\n", imageRefCopy);
         return false;
     }
 
@@ -978,6 +982,7 @@ bool load_image(const char *imageFile)
 
     return true;
 }
+
 
 void font_size(int size)
 {
