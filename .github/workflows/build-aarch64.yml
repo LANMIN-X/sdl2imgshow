@@ -5,41 +5,37 @@ on:
 
 jobs:
   build-aarch64:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ARM64 dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            cmake build-essential \
-            libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+      # 使用 qemu + debian 11 aarch64 构建，glibc = 2.31
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Configure
-        run: cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug
+      - name: Build inside Debian 11 ARM64
+        uses: uraimo/run-on-arch-action@v2.7.1
+        with:
+          arch: aarch64
+          distro: debian_bullseye   # glibc 2.31
+          run: |
+            apt-get update
+            apt-get install -y cmake build-essential \
+              libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+            cmake -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            cmake --build build -j4
 
-      - name: Build
-        run: cmake --build build -j4
-
-      # 自动生成 TAG（例如 build-20240217-153012）
       - name: Generate tag
         id: create_tag
         run: |
-          TAG="build-$(date +'%Y%m%d-%H%M%S')"
+          TAG="aarch64-$(date +'%Y%m%d-%H%M%S')"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "生成 TAG: $TAG"
 
-      # 创建 Release
-      - name: Create Release
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.create_tag.outputs.tag }}
-          name: "Build ${{ steps.create_tag.outputs.tag }}"
-          draft: false
-          prerelease: false
-          files: |
-            build/sdl2imgshow
+          files: build/sdl2imgshow
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
