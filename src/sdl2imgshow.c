@@ -882,7 +882,7 @@ SDL_Surface* render_text_wrapped(const char* text)
     for (int i = 0; i < numLines; ++i)
     {
         int width, height;
-        TTF_SizeText(globalFont, lines[i], &width, &height);
+        TTF_SizeUTF8(globalFont, lines[i], &width, &height);
 
         if (width > maxWidth)
         {
@@ -907,7 +907,7 @@ SDL_Surface* render_text_wrapped(const char* text)
     for (int i = 0; i < numLines; ++i)
     {
         fprintf(stderr, "- %s\n", lines[i]);
-        SDL_Surface* tempSurface = TTF_RenderText_Blended_Wrapped(globalFont, lines[i], (SDL_Color){255, 255, 255, 255}, maxWidth);
+        SDL_Surface* tempSurface = TTF_RenderUTF8_Blended_Wrapped(globalFont, lines[i],(SDL_Color){255, 255, 255, 255},maxWidth);
         if (!tempSurface)
         {
             fprintf(stderr, "Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
