@@ -1,32 +1,36 @@
 name: Manual Build AArch64
 
 on:
-  workflow_dispatch:   # 手动触发
+  workflow_dispatch:
 
 jobs:
   build-aarch64:
-    name: Build on aarch64
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Enable ARM64 architecture
         run: |
+          sudo dpkg --add-architecture arm64
           sudo apt-get update
+
+      - name: Install dependencies for ARM64
+        run: |
           sudo apt-get install -y \
             cmake build-essential \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-            libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev \
-            qemu-user-static
+            libsdl2-dev:arm64 libsdl2-image-dev:arm64 libsdl2-ttf-dev:arm64
 
-      - name: Configure (cross compile for aarch64)
+      - name: Configure (aarch64 cross compile)
         run: |
           cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug \
                 -DCMAKE_SYSTEM_NAME=Linux \
                 -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+                -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
 
       - name: Build
         run: cmake --build build -j4
