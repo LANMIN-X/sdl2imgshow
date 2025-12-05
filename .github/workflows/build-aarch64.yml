@@ -11,26 +11,30 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Enable ARM64 architecture
+      - name: Install cross-compile tools
         run: |
-          sudo dpkg --add-architecture arm64
           sudo apt-get update
-
-      - name: Install dependencies for ARM64
-        run: |
           sudo apt-get install -y \
             cmake build-essential \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-            libsdl2-dev:arm64 libsdl2-image-dev:arm64 libsdl2-ttf-dev:arm64
+            ninja-build curl zip unzip tar
 
-      - name: Configure (aarch64 cross compile)
+      - name: Install vcpkg
         run: |
-          cmake -Bbuild -DCMAKE_BUILD_TYPE=RelDebug \
-                -DCMAKE_SYSTEM_NAME=Linux \
-                -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-                -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Install SDL2 (ARM64)
+        run: |
+          ./vcpkg/vcpkg install sdl2:sdl2-image:sdl2-ttf --triplet arm64-linux
+
+      - name: Configure (ARM64)
+        run: |
+          cmake -Bbuild \
+            -DCMAKE_BUILD_TYPE=RelDebug \
+            -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=arm64-linux \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
 
       - name: Build
         run: cmake --build build -j4
