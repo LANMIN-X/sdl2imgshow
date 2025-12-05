@@ -10,11 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build inside ARM64 container
+      - name: Build inside ARM64 container (Debian 12)
         uses: uraimo/run-on-arch-action@v2.7.1
         with:
           arch: aarch64
-          distro: ubuntu22.04
+          distro: debian12
 
           githubToken: ${{ github.token }}
 
