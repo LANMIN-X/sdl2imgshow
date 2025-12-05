@@ -24,9 +24,11 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git
           ./vcpkg/bootstrap-vcpkg.sh
 
-      - name: Install SDL2 (ARM64)
+      - name: Install SDL2 packages (ARM64)
         run: |
-          ./vcpkg/vcpkg install sdl2:sdl2-image:sdl2-ttf --triplet arm64-linux
+          ./vcpkg/vcpkg install sdl2 --triplet arm64-linux
+          ./vcpkg/vcpkg install sdl2-image --triplet arm64-linux
+          ./vcpkg/vcpkg install sdl2-ttf --triplet arm64-linux
 
       - name: Configure (ARM64)
         run: |
